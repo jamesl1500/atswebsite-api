@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('files', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('application_id')->constrained()->onDelete('cascade');
-            $table->string('path');
-            $table->string('original_name');
-            $table->string('mime_type');
+            $table->string('name')->comment('File name');
+            $table->string('path')->comment('File path');
+            $table->string('type')->comment('File type');
+            $table->string('size')->comment('File size');
+            $table->string('extension')->comment('File extension');
             $table->timestamps();
         });
     }

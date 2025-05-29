@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('username')->unique();
+            $table->string('phone')->nullable();
+            $table->foreignId('profile_picture_id')->nullable()->constrained('files')->onDelete('set null');
+            $table->foreignId('cover_picture_id')->nullable()->constrained('files')->onDelete('set null');
+            $table->string('bio')->nullable();
+            $table->enum('role', ['admin', 'recruiter', 'user'])->default('user');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

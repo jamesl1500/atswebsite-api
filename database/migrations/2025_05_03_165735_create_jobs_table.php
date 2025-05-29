@@ -24,7 +24,6 @@ return new class extends Migration
             $table->string('salary')->nullable();
             $table->boolean('remote')->default(false);
             $table->boolean('published')->default(false);
-            
             $table->timestamps();
         });
     }

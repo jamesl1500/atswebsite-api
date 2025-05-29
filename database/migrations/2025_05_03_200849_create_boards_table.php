@@ -17,9 +17,10 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('slug')->unique();
-            $table->string('logo_path')->nullable();
+            $table->foreignId('logo_id')->nullable()->constrained('files')->onDelete('set null');
+            $table->foreignId('cover_id')->nullable()->constrained('files')->onDelete('set null');
             $table->string('theme_color')->default('#000000');
-            $table->boolean('is_public')->default(false);
+            $table->boolean('is_public')->default(true);
             $table->timestamps();
         });
     }

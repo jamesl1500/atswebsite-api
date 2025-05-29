@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email');
             $table->string('phone')->nullable();
             $table->text('cover_letter')->nullable();
-            $table->text('resume'); // Assuming this is a file path or URL
+            $table->foreignId('resume')->nullable()->constrained('files')->onDelete('set null');
             $table->foreignId('current_stage_id')->nullable()->constrained('pipeline_stages')->onDelete('set null');
             $table->timestamps();
         });

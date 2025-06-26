@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('job_id')->constrained()->onDelete('cascade');
             $table->string('label');
             $table->enum('type', ['text', 'textarea', 'select', 'checkbox', 'file']);
-            $table->text('options')->nullable(); // JSON field for select options
+            $table->json('options')->nullable(); // JSON field for select options
             $table->boolean('required')->default(false);
             $table->integer('order')->default(0);
             $table->timestamps();

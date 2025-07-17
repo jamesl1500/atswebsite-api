@@ -3,32 +3,104 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+
+use App\Libraries\UserLibrary;
 
 class AuthController extends Controller
 {
-    //
+    /**
+     * User Library instance.
+     * 
+     * @var \App\Libraries\UserLibrary
+     */
+    protected $userLibrary;
+
+    /**
+     * User model instance.
+     * 
+     * @var \App\Models\User
+     */
+    protected $userModel;
+
+    /**
+     * Create a new controller instance.
+     */
+    public function __construct()
+    {
+        $this->userLibrary = new UserLibrary();
+        $this->userModel = new User();
+    }
+
+    /**
+     * Get authenticated user.
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAuthenticatedUser()
+    {
+        // Get the authenticated user
+        $user = auth()->user();
+
+        // Check if user is authenticated
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+
+        // Return the authenticated user's information
+        return response()->json($user);
+    }
+
+    /**
+     * Register a new user.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function register(Request $request)
     {
         // Validate the request data
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'username' => 'required|string|max:255|unique:users',
+            'phone' => 'required|string|max:15',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'cover_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'bio' => 'nullable|string|max:1000',
+            'role' => 'required|string|in:admin,user,recruiter',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // Create a new user
-        $user = User::create([
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Run the create user logic
+        $createUser = $this->userLibrary->createUser([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => bcrypt($request->password),
+            'username' => $request->username,
+            'phone' => $request->phone,
+            'profile_picture' => $request->profile_picture,
+            'cover_picture' => $request->cover_picture,
+            'bio' => $request->bio,
+            'role' => $request->role,
+            'password' => Hash::make($request->password),
         ]);
 
+        if (!$createUser) {
+            return response()->json(['message' => 'Failed to create user'], 500);
+        }
+
         // Generate a token for the user
-        $token = $user->createToken('Personal Access Token')->plainTextToken;
+        $token = $createUser->createToken('Personal Access Token')->plainTextToken;
 
         return response()->json([
-            'user' => $user,
+            'user' => $createUser,
             'token' => $token,
             'message' => 'User registered successfully',
         ], 201);

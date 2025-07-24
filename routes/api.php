@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\OnboardingController;
+
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +23,22 @@ Route::group(['prefix' => 'auth'], function () {
     /** @api {post} /auth/register Register a new user */
     Route::post('/register', [AuthController::class, 'register']);
 
+    /** @api {post} /auth/verify-email Verify user email */
+    Route::get('/verify-email/{id}/{hash}', function (EmailVerificationRequest $request) {
+        // Verify email address
+        $request->fulfill();
+
+        // Generate sanctum token
+        $user = $request->user();
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        // Return response
+        return redirect(env('FRONTEND_URL') . '/onboarding?token=' . $token);
+    })->middleware(['signed'])->name('verification.verify');
+
+    /** @api {post} /auth/resend-verification-email Resend verification email */
+    Route::post('/resend-verification-email', [AuthController::class, 'resendVerificationEmail']);
+
     /** @api {post} /auth/logout Logout a user */
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
@@ -28,6 +47,50 @@ Route::group(['prefix' => 'auth'], function () {
 
     /** @api {get} /auth/user Get authenticated user */
     Route::get('/user', [AuthController::class, 'getAuthenticatedUser'])->middleware('auth:sanctum');
+});
+
+/**
+ * Onboarding routes
+ */
+Route::group(['prefix' => 'onboarding'], function () {
+    /** @api {get} /onboarding/current-stage Get current onboarding stage */
+    Route::get('/current-stage', [OnboardingController::class, 'getCurrentStage'])->middleware('auth:sanctum');
+
+    /** @api {get} /onboarding/status Get onboarding status */
+    Route::get('/current-status', [OnboardingController::class, 'getOnboardingStatus'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/update-stage Update onboarding stage */
+    Route::post('/update-stage', [OnboardingController::class, 'updateOnboardingStage'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/update-status Update onboarding status */
+    Route::post('/update-status', [OnboardingController::class, 'updateOnboardingStatus'])->middleware('auth:sanctum');
+
+    /** @api {get} /onboarding/stage/:stage Get onboarding stage */
+    Route::get('/stage/{stage}', [OnboardingController::class, 'index'])->middleware('auth:sanctum');
+
+    /** @api {get} /onboarding/next-stage Get next onboarding stage */
+    Route::get('/next-stage', [OnboardingController::class, 'getNextStage'])->middleware('auth:sanctum');
+
+    /** @api {get} /onboarding/previous-stage Get previous onboarding stage */
+    Route::get('/previous-stage', [OnboardingController::class, 'getPreviousStage'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/move-to-previous-stage Move to previous onboarding stage */
+    Route::post('/move-to-previous-stage', [OnboardingController::class, 'moveToPreviousStage'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/move-to-next-stage Move to next onboarding stage */
+    Route::post('/move-to-next-stage', [OnboardingController::class, 'moveToNextStage'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/welcome Welcome a user */
+    Route::post('/welcome', [OnboardingController::class, 'welcome'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/profile Complete profile onboarding */
+    Route::post('/profile', [OnboardingController::class, 'profile'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/company Complete company onboarding */
+    Route::post('/company', [OnboardingController::class, 'company'])->middleware('auth:sanctum');
+
+    /** @api {post} /onboarding/complete Complete onboarding */
+    Route::post('/complete', [OnboardingController::class, 'complete'])->middleware('auth:sanctum');
 });
 
 /**

@@ -55,6 +55,34 @@ class AuthController extends Controller
     }
 
     /**
+     * Resend verification email.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function resendVerificationEmail(Request $request)
+    {
+        // Validate the request
+        $validatedData = $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        // Get the user by email
+        $user = $this->userLibrary->getUserByEmail($validatedData['email']);
+
+        // Check if user exists
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Send the verification email
+        $user->sendEmailVerificationNotification();
+
+        // Return success response
+        return response()->json(['message' => 'Verification email resent successfully']);
+    }
+
+    /**
      * Register a new user.
      *
      * @param \Illuminate\Http\Request $request
@@ -67,11 +95,6 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'username' => 'required|string|max:255|unique:users',
-            'phone' => 'required|string|max:15',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'cover_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'bio' => 'nullable|string|max:1000',
-            'role' => 'required|string|in:admin,user,recruiter',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -84,11 +107,6 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'username' => $request->username,
-            'phone' => $request->phone,
-            'profile_picture' => $request->profile_picture,
-            'cover_picture' => $request->cover_picture,
-            'bio' => $request->bio,
-            'role' => $request->role,
             'password' => Hash::make($request->password),
         ]);
 
@@ -102,7 +120,7 @@ class AuthController extends Controller
         return response()->json([
             'user' => $createUser,
             'token' => $token,
-            'message' => 'User registered successfully',
+            'message' => 'Registration successful, please verify your email.',
         ], 201);
     }
 

@@ -117,6 +117,71 @@ class UserLibrary
     }
 
     /**
+     * Update user "profile picture"
+     * 
+     * @param int $userId
+     * @param mixed $profilePicture
+     * @return bool
+     */
+    public function updateUserProfilePicture(int $userId, $profilePicture): bool
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            throw new \Exception('User not found.');
+        }
+
+        // Handle profile picture upload
+        $file = $this->fileLibrary->upload($profilePicture);
+
+        if (!$file) {
+            throw new \Exception('Failed to upload profile picture.');
+        }
+        
+        // Update the user's profile picture ID
+        $user->profile_picture_id = $file->id;
+
+        // Save the user model
+        if (!$user->save()) {
+            throw new \Exception('Failed to update user profile picture.');
+        }
+
+        return true;
+    }
+
+    /**
+     * Update user "cover picture"
+     * 
+     * @param int $userId
+     * @param mixed $coverPicture
+     * @return bool
+     */
+    public function updateUserCoverPicture(int $userId, $coverPicture): bool
+    {
+        $user = User::find($userId);
+
+        if (!$user) {
+            throw new \Exception('User not found.');
+        }
+
+        // Handle cover picture upload
+        $file = $this->fileLibrary->upload($coverPicture);
+
+        if (!$file) {
+            throw new \Exception('Failed to upload cover picture.');
+        }
+
+        // Update the user's cover picture ID
+        $user->cover_picture_id = $file->id;
+
+        // Save the user model
+        if (!$user->save()) {
+            throw new \Exception('Failed to update user cover picture.');
+        }
+
+        return true;
+    }
+
+    /**
      * Update user by ID.
      *
      * @param int $id
@@ -155,5 +220,84 @@ class UserLibrary
     public function getAllUsers()
     {
         return User::all();
+    }
+
+    /**
+     * Get user onboarding status.
+     * 
+     * @param int $userId
+     * @return string
+     */
+    public function getUserOnboardingStatus(int $userId): string
+    {
+        $user = User::find($userId);
+        if ($user) {
+            return $user->onboarding_stage;
+        }
+        return 'not_found';
+    }
+
+    /**
+     * Get user onboarding stage
+     * 
+     * @param int $userId
+     * @return string
+     */
+    public function getUserOnboardingStage(int $userId): string
+    {
+        $user = User::find($userId);
+        if ($user) {
+            return $user->onboarding_stage;
+        }
+        return 'not_found';
+    }
+
+    /**
+     * Set user onboarding stage.
+     *
+     * @param int $userId\
+     * @param string $stage
+     * @return bool
+     */
+    public function setUserOnboardingStage(int $userId, string $stage): bool
+    {
+        $user = User::find($userId);
+        if ($user) {
+            $user->onboarding_stage = $stage;
+            return $user->save();
+        }
+        return false;
+    }
+
+    /**
+     * Check if user is in onboarding.
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function isUserOnboarding(int $userId): bool
+    {
+        $user = User::find($userId);
+        if ($user) {
+            return $user->is_onboarding;
+        }
+        return false;
+    }
+
+    /**
+     * Set user onboarding status.
+     *
+     * @param int $userId
+     * @param bool $status
+     * @return bool
+     */
+    public function setUserOnboardingStatus(int $userId, bool $status): bool
+    {
+        $user = User::find($userId);
+        if ($user) {
+            $user->is_onboarding = $status;
+            return $user->save();
+        }
+        return false;
     }
 }

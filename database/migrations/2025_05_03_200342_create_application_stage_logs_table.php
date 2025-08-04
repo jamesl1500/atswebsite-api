@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('pipeline_stage_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

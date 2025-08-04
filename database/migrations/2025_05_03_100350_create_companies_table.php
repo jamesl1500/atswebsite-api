@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('logo_id')->nullable()->constrained('files')->onDelete('set null'); // company logo
             $table->foreignId('cover_id')->nullable()->constrained('files')->onDelete('set null'); // company cover image
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

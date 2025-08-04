@@ -54,12 +54,55 @@ class ApplicationLibrary
     }
 
     /**
+     * See if application is trashed
+     * 
+     * @param int $id
+     * @return bool
+     */
+    public function isApplicationTrashed($id)
+    {
+        $application = Application::withTrashed()->find($id);
+        return $application ? $application->trashed() : false;
+    }
+
+    /**
      * Delete an application.
      *
      * @param int $id
      * @return bool|null
      */
     public function deleteApplication($id)
+    {
+        $application = Application::find($id);
+        if ($application) {
+            return $application->forceDelete();
+        }
+        return false;
+    }
+
+    /**
+     * Restore a soft-deleted application.
+     * 
+     * @param int $id
+     * @return bool|null
+     */
+    public function restoreApplication($id)
+    {
+        $application = Application::withTrashed()->find($id);
+
+        if ($application) {
+            return $application->restore();
+        }
+        return false;
+    }
+
+    /**
+     * Soft delete an application.
+     *
+     * @param int $id
+     * @return bool|null
+     */
+    public function softDeleteApplication($id)
     {
         $application = Application::find($id);
         if ($application) {

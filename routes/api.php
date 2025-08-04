@@ -9,9 +9,10 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+// Create a route to show cookies that are set in the browser
+Route::get('/cookies', function (Request $request) {
+    return response()->json($request->cookies->all());
+});
 
 /**
  * Auth routes
@@ -24,20 +25,13 @@ Route::group(['prefix' => 'auth'], function () {
     Route::post('/register', [AuthController::class, 'register']);
 
     /** @api {post} /auth/verify-email Verify user email */
-    Route::get('/verify-email/{id}/{hash}', function (EmailVerificationRequest $request) {
-        // Verify email address
-        $request->fulfill();
-
-        // Generate sanctum token
-        $user = $request->user();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        // Return response
-        return redirect(env('FRONTEND_URL') . '/onboarding?token=' . $token);
-    })->middleware(['signed'])->name('verification.verify');
+    Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])->middleware(['signed'])->name('verification.verify');
 
     /** @api {post} /auth/resend-verification-email Resend verification email */
     Route::post('/resend-verification-email', [AuthController::class, 'resendVerificationEmail']);
+
+    /** @api {post} /auth/consume-token Consume a token */
+    Route::post('/consume-token', [AuthController::class, 'consumeToken']);
 
     /** @api {post} /auth/logout Logout a user */
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -47,6 +41,12 @@ Route::group(['prefix' => 'auth'], function () {
 
     /** @api {get} /auth/user Get authenticated user */
     Route::get('/user', [AuthController::class, 'getAuthenticatedUser'])->middleware('auth:sanctum');
+
+    /** @api {post} /auth/forgot-password Request a password reset link */
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+
+    /** @api {post} /auth/reset-password Reset user password */
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 });
 
 /**

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->boolean('is_admin')->default(false);
             $table->timestamp('last_read_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

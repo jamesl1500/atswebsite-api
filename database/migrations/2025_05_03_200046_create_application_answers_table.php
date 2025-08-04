@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('job_custom_field_id')->constrained()->onDelete('cascade');
             $table->string('answer'); // Assuming this is a string, adjust as necessary
             $table->timestamps();
+            $table->softDeletes(); // Soft delete for application answers
         });
     }
 

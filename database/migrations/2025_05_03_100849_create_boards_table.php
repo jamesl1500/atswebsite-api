@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('theme_color')->default('#000000');
             $table->boolean('is_public')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

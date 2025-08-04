@@ -97,8 +97,52 @@ class BoardLibrary
     {
         $board = Board::find($id);
         if ($board) {
+            return $board->forceDelete();
+        }
+        return false;
+    }
+
+    /**
+     * Soft delete a board.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function softDeleteBoard($id)
+    {
+        $board = Board::find($id);
+
+        if ($board) {
             return $board->delete();
         }
         return false;
+    }
+
+    /**
+     * Restore a soft-deleted board.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function restoreBoard($id)
+    {
+        $board = Board::withTrashed()->find($id);
+
+        if ($board) {
+            return $board->restore();
+        }
+        return false;
+    }
+
+    /**
+     * Check if a board is trashed.
+     *
+     * @param int $id
+     * @return bool
+     */
+    public function isBoardTrashed($id)
+    {
+        $board = Board::withTrashed()->find($id);
+        return $board ? $board->trashed() : false;
     }
 }

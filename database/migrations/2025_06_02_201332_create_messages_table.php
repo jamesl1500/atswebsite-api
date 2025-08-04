@@ -20,6 +20,7 @@ return new class extends Migration
             $table->foreignId('attachment_id')->nullable()->constrained('files')->onDelete('set null');
             $table->boolean('is_read')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -7,12 +7,21 @@ use Illuminate\Http\Request;
 use App\Models\Application;
 use App\Models\File;
 
+use App\Libraries\ApplicationLibrary;
+
 class ApplicationController extends Controller
 {
+    protected $applicationLibrary;
+
+    public function __construct(ApplicationLibrary $applicationLibrary)
+    {
+        $this->applicationLibrary = $applicationLibrary;
+    }
+
     // Display a listing of the resource
     public function index()
     {
-        $applications = Application::all();
+        $applications = $this->applicationLibrary->getAllApplications();
         return response()->json($applications);
     }
 
@@ -58,7 +67,7 @@ class ApplicationController extends Controller
     // Display the specified resource
     public function show($id)
     {
-        $application = Application::find($id);
+        $application = $this->applicationLibrary->findApplicationById($id);
 
         if (!$application) {
             return response()->json(['message' => 'Application not found'], 404);
@@ -77,7 +86,7 @@ class ApplicationController extends Controller
     // Update the specified resource in storage
     public function update(Request $request, $id)
     {
-        $application = Application::find($id);
+        $application = $this->applicationLibrary->findApplicationById($id);
 
         if (!$application) {
             return response()->json(['message' => 'Application not found'], 404);
@@ -89,20 +98,46 @@ class ApplicationController extends Controller
             'phone' => 'sometimes|required|string|max:15',
         ]);
 
-        $application->update($validatedData);
+        $this->applicationLibrary->updateApplication($id, $validatedData);
         return response()->json($application);
     }
 
     // Remove the specified resource from storage
     public function destroy($id)
     {
-        $application = Application::find($id);
+        $application = $this->applicationLibrary->findApplicationById($id);
 
         if (!$application) {
             return response()->json(['message' => 'Application not found'], 404);
         }
 
-        $application->delete();
+        $this->applicationLibrary->deleteApplication($id);
         return response()->json(['message' => 'Application deleted successfully']);
+    }
+
+    // Soft delete the specified resource
+    public function softDelete($id)
+    {
+        $application = $this->applicationLibrary->findApplicationById($id);
+
+        if (!$application) {
+            return response()->json(['message' => 'Application not found'], 404);
+        }
+
+        $this->applicationLibrary->softDeleteApplication($id);
+        return response()->json(['message' => 'Application soft deleted successfully']);
+    }
+
+    // Restore a soft-deleted application
+    public function restore($id)
+    {
+        $application = $this->applicationLibrary->findApplicationById($id);
+
+        if (!$application) {
+            return response()->json(['message' => 'Application not found'], 404);
+        }
+
+        $this->applicationLibrary->restoreApplication($id);
+        return response()->json(['message' => 'Application restored successfully']);
     }
 }

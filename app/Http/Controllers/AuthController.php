@@ -7,8 +7,13 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 use App\Libraries\UserLibrary;
+
+use Laravel\Sanctum\PersonalAccessToken;
+
+use Illuminate\Auth\Events\Registered;
 
 class AuthController extends Controller
 {
@@ -36,18 +41,76 @@ class AuthController extends Controller
     }
 
     /**
+     * Forgot Password
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function forgotPassword(Request $request)
+    {
+        // Validate the request
+        $validatedData = $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        // Get the user by email
+        $user = $this->userLibrary->getUserByEmail($validatedData['email']);
+
+        // Check if user exists
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Send the password reset link
+        $user->sendPasswordResetNotification();
+
+        // Return success response
+        return response()->json(['message' => 'Password reset link sent successfully']);
+    }
+
+    /**
+     * Reset Password
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function resetPassword(Request $request)
+    {
+        // Validate the request
+        $validatedData = $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Get the user by email
+        $user = $this->userLibrary->getUserByEmail($validatedData['email']);
+
+        // Check if user exists
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Update the user's password
+        $user->password = Hash::make($validatedData['password']);
+        $user->save();
+
+        // Return success response
+        return response()->json(['message' => 'Password reset successfully']);
+    }
+
+    /**
      * Get authenticated user.
      * 
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getAuthenticatedUser()
+    public function getAuthenticatedUser(Request $request)
     {
         // Get the authenticated user
-        $user = auth()->user();
+        $user = $request->user();
 
         // Check if user is authenticated
         if (!$user) {
-            return response()->json(['message' => 'Unauthenticated'], 401);
+            return response()->json(['message' => 'Unauthenticated 1'], 401);
         }
 
         // Return the authenticated user's information
@@ -83,6 +146,83 @@ class AuthController extends Controller
     }
 
     /**
+     * Verify user email.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function verifyEmail(Request $request, $id, $hash)
+    {
+        // Find the user by ID
+        $user = $this->userLibrary->getUserById($id);
+
+        // Check if user exists
+        if (!$user) {
+            return redirect('/')->with('error', 'User not found');
+        }
+
+        // Verify the email
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return redirect('/')->with('error', 'Invalid verification link');
+        }
+
+        // Mark the email as verified
+        $user->markEmailAsVerified();
+
+        // Generate a new token for the user
+        $token = $user->createToken('email-verification')->plainTextToken;
+
+        // Lets see what the current onboarding stage is
+        if ($user->is_onboarding) {
+            // Redirect to the onboarding page
+            return redirect(env('FRONTEND_URL') . '/onboarding/' . $user->onboarding_stage . '?token=' . $token)
+                ->with('success', 'Email verified successfully, please complete the onboarding process');
+        }
+
+        // Redirect to the home page with success message
+        return redirect(env('FRONTEND_URL') . '/')->with('success', 'Email verified successfully');
+    }
+
+    /**
+     * Consume a token.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function consumeToken(Request $request)
+    {
+        // Validate the request
+        $validatedData = $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        // Find token
+        $token = PersonalAccessToken::findToken($validatedData['token']);
+
+        // Check if token exists
+        if (!$token) {
+            return response()->json(['message' => 'Token not found'], 404);
+        }
+
+        // Verify user
+        $user = $token->tokenable;
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Login the user via session
+        Auth::login($user);
+
+        // Revoke token
+        $token->delete();
+
+        // Return success response
+        return response()->json(['message' => 'Token consumed successfully, user logged in', 'user' => $user]);
+    }
+
+
+    /**
      * Register a new user.
      *
      * @param \Illuminate\Http\Request $request
@@ -113,6 +253,9 @@ class AuthController extends Controller
         if (!$createUser) {
             return response()->json(['message' => 'Failed to create user'], 500);
         }
+
+        // Fire the Registered event
+        event(new Registered($createUser));
 
         // Generate a token for the user
         $token = $createUser->createToken('Personal Access Token')->plainTextToken;

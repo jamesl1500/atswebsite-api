@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class JobCustomField extends Model
 {
+    use SoftDeletes;
+    
     // Table Name
     protected $table = "job_custom_fields";
 

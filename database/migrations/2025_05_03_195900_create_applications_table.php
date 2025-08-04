@@ -21,6 +21,7 @@ return new class extends Migration
             $table->foreignId('resume')->nullable()->constrained('files')->onDelete('set null');
             $table->foreignId('current_stage_id')->nullable()->constrained('pipeline_stages')->onDelete('set null');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('team_id')->constrained()->onDelete('cascade');
             $table->foreignId('board_id')->constrained()->onDelete('cascade');
+            $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->string('title');
             $table->string('company');
             $table->string('location');
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->boolean('remote')->default(false);
             $table->boolean('published')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -22,9 +22,12 @@ return new class extends Migration
             $table->string('bio')->nullable();
             $table->enum('role', ['admin', 'recruiter', 'user'])->default('user');
             $table->timestamp('email_verified_at')->nullable();
+            $table->boolean('is_onboarding')->default(true);
+            $table->string('onboarding_stage')->default('welcome');
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

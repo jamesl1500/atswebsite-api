@@ -3,6 +3,7 @@
 use App\Http\Controllers\BoardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OnboardingController;
+use App\Http\Controllers\HeartbeatController;
 
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
@@ -15,7 +16,44 @@ Route::get('/cookies', function (Request $request) {
 });
 
 /**
+ * Heartbeat
+ * 
+ * - GET /heartbeats
+ * - POST /heartbeats
+ * - GET /heartbeats/{id}
+ * - PUT /heartbeats/{id}
+ * - DELETE /heartbeats/{id}
+ */
+Route::group(['prefix' => 'heartbeats'], function() {
+    /** @api {get} /heartbeats Get all heartbeats */
+    Route::get('/', [HeartbeatController::class, 'index']);
+
+    /** @api {post} /heartbeats Create a new heartbeat */
+    Route::post('/', [HeartbeatController::class, 'store']);
+
+    /** @api {get} /heartbeats/{id} Get a specific heartbeat */
+    Route::get('/{id}', [HeartbeatController::class, 'show']);
+
+    /** @api {put} /heartbeats/{id} Update a specific heartbeat */
+    Route::put('/{id}', [HeartbeatController::class, 'update']);
+
+    /** @api {delete} /heartbeats/{id} Delete a specific heartbeat */
+    Route::delete('/{id}', [HeartbeatController::class, 'destroy']);
+});
+
+/**
  * Auth routes
+ * 
+ * - POST /auth/login
+ * - POST /auth/register
+ * - GET /auth/verify-email/{id}/{hash}
+ * - POST /auth/resend-verification-email
+ * - POST /auth/consume-token
+ * - POST /auth/logout
+ * - POST /auth/logout/all
+ * - GET /auth/user
+ * - POST /auth/forgot-password
+ * - POST /auth/reset-password
  */
 Route::group(['prefix' => 'auth'], function () {
     /** @api {post} /auth/login Login a user */
@@ -51,6 +89,20 @@ Route::group(['prefix' => 'auth'], function () {
 
 /**
  * Onboarding routes
+ * 
+ * - GET /onboarding/current-stage
+ * - GET /onboarding/current-status
+ * - POST /onboarding/update-stage
+ * - POST /onboarding/update-status
+ * - GET /onboarding/stage/{stage}
+ * - GET /onboarding/next-stage
+ * - GET /onboarding/previous-stage
+ * - POST /onboarding/move-to-previous-stage
+ * - POST /onboarding/move-to-next-stage
+ * - POST /onboarding/welcome
+ * - POST /onboarding/profile
+ * - POST /onboarding/company
+ * - POST /onboarding/complete
  */
 Route::group(['prefix' => 'onboarding'], function () {
     /** @api {get} /onboarding/current-stage Get current onboarding stage */
@@ -95,6 +147,15 @@ Route::group(['prefix' => 'onboarding'], function () {
 
 /**
  * Board routes
+ * 
+ * - GET /boards
+ * - GET /boards/find/by/user/{userId}
+ * - GET /boards/find/by/company/{companyId}
+ * - GET /boards/{id}
+ * - GET /boards/find/by/slug/{slug}
+ * - POST /boards/create
+ * - PUT /boards/update/{id}
+ * - DELETE /boards/delete/{id}
  */
 Route::group(['prefix' => 'boards'], function(){
     /** @api {get} /boards Get all boards */

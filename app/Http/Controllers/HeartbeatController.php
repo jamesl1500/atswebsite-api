@@ -41,18 +41,26 @@ class HeartbeatController extends Controller
      */
     public function store(Request $request)
     {
+        // If $request contains a user
+        $user = $request->user();
+
         // Validate the request data
-        $validatedData = $request->validate([
-            'user_id' => 'nullable|exists:users,id',
-            'ip_address' => 'nullable|ip',
-            'user_agent' => 'nullable|string',
-            'is_authenticated' => 'boolean',
-        ]);
+        $isAuthenticated = $user ? true : false;
+
+        // From the request, get the user_agent, and ip_address
+        $validatedData['user_agent'] = $request->header('User-Agent');
+        $validatedData['ip_address'] = $request->ip();
+        $validatedData['is_authenticated'] = $isAuthenticated;
 
         // Create a new heartbeat
         $heartbeat = $this->heartbeatModel->create($validatedData);
 
-        return response()->json($heartbeat, 201);
+        // If the heartbeat was created successfully
+        if ($heartbeat) {
+            return response()->json($heartbeat, 201);
+        }
+
+        return response()->json(['message' => 'Failed to create heartbeat / Server has gone away'], 500);
     }
 
     /**

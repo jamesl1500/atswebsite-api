@@ -214,6 +214,9 @@ class AuthController extends Controller
         // Login the user via session
         Auth::login($user);
 
+        // Get a new user token
+        $user->createToken('Personal Access Token')->plainTextToken;
+
         // Revoke token
         $token->delete();
 
